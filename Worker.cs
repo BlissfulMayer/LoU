@@ -11,14 +11,16 @@ namespace LoU
 {
     public class Worker : MonoBehaviour
     {
-        private const bool VERBOSE_DEBUG = false;
-        private bool Intercepting = false;
+        private const bool VERBOSE_DEBUG = true;
+        private bool Intercepting = true;
 
         private int ProcessId = -1;
         private float updateFrequency = 0.1f;
 
         private Assembly AssemblyCSharp = null;
 
+        private String GameDirectory;
+        private String LoUAMDirectory;
         private String ClientStatusMemoryMapMutexName;
         private String ClientStatusMemoryMapName;
         private Int32 ClientStatusMemoryMapSize;
@@ -60,6 +62,67 @@ namespace LoU
 
         public void Start()
         {
+
+            RegistryKey SoftwareKey = Registry.CurrentUser.OpenSubKey("Software", true);
+
+            RegistryKey LoUKey = SoftwareKey.OpenSubKey("LoU", true);
+            if (LoUKey == null)
+            {
+                LoUKey = SoftwareKey.CreateSubKey("LoU", true);
+            }
+
+            RegistryKey LoUAMKey = SoftwareKey.OpenSubKey("LoUAM", true);
+            if (LoUAMKey == null)
+            {
+                LoUAMKey = SoftwareKey.CreateSubKey("LoUAM", true);
+            }
+
+            GameDirectory = (string)LoUKey.GetValue("GameDirectory", "./");
+            LoUAMDirectory = (string)LoUAMKey.GetValue("WorkingDirectory", "./");
+
+            if(LoUAMDirectory != "./")
+            {
+
+                string[] LoUAMAssemblies = {
+                "Assembly-CSharp.dll",
+                "Assembly-CSharp-firstpass.dll",
+                "CoreUtil.dll",
+                "MessageCore.dll",
+                "protobuf-net.dll",
+                "UnityEngine.CoreModule.dll",
+                "UnityEngine.InputLegacyModule.dll",
+                "UnityEngine.InputModule.dll",
+                "UnityEngine.PhysicsModule.dll",
+                "UnityEngine.UI.dll",
+                };
+
+                foreach (string LoUAMAssembly in LoUAMAssemblies)
+                {
+                    string FullAssemblyPath = LoUAMDirectory + LoUAMAssembly;
+                    Assembly.LoadFile(FullAssemblyPath);
+                }
+
+            }
+
+            string[] UnityAssemblies = {
+                "Assembly-CSharp.dll",
+                "Assembly-CSharp-firstpass.dll",
+                "CoreUtil.dll",
+                "MessageCore.dll",
+                "protobuf-net.dll",
+                "UnityEngine.CoreModule.dll",
+                "UnityEngine.InputLegacyModule.dll",
+                "UnityEngine.InputModule.dll",
+                "UnityEngine.PhysicsModule.dll",
+                "UnityEngine.UI.dll",
+            };
+
+            foreach (string UnityAssembly in UnityAssemblies)
+            {
+                string FullAssemblyPath = GameDirectory + @"\Legends of Aria_Data\Managed\" + UnityAssembly;
+                Assembly.LoadFile(FullAssemblyPath);
+            }
+
             Utils.Log("EasyLoU - " + Assembly.GetExecutingAssembly().GetName().Version.ToString() + " - LoU.dll started!");
 
             this.ProcessId = Process.GetCurrentProcess().Id;
@@ -233,6 +296,30 @@ namespace LoU
                 }
                 switch (ClientCommand.CommandType)
                 {
+
+                    case CommandType.ExportMap:
+                        {
+
+                            if (LoUAMDirectory != "./")
+                            {
+                                string mapDirectory = Path.GetFullPath(LoUAMDirectory + @"\MapData\");
+
+                                UnityEngine.Object[] textures = Resources.LoadAll("prefabs/minimaps/newceladormaps/", typeof(Texture2D));
+                                foreach (Texture2D texture in textures)
+                                {
+                                    MapExporter.ExportTexture(texture, mapDirectory);
+                                }
+
+                                UnityEngine.Object[] prefabs = Resources.LoadAll("prefabs/minimaps/newceladormaps/", typeof(GameObject));
+                                foreach (GameObject prefab in prefabs)
+                                {
+                                    MapExporter.ExportPrefab(prefab, mapDirectory);
+                                }
+                            }
+
+                            break;
+                        }
+
                     case CommandType.FindItem:
                         {
                             var watch = new System.Diagnostics.Stopwatch();
