@@ -55,8 +55,6 @@ namespace LoU
         {
             Transform transform = Prefab.transform;
 
-            string exportFullName = mapDirectory;
-
             var localPositionDictionary = new System.Collections.Generic.Dictionary<string, object>
             {
                 ["X"] = transform.localPosition.x,
@@ -88,7 +86,7 @@ namespace LoU
 
             var serializedTransform = JsonConvert.SerializeObject(transformDictionary);
 
-            var exportFullName = Path.Combine(exportPathName, transform.name.ToString() + ".transform");
+            var exportFullName = Path.Combine(mapDirectory, transform.name.ToString() + ".transform");
 
             File.WriteAllText(exportFullName, serializedTransform);
             System.Diagnostics.Debug.WriteLine(serializedTransform.Length / 1024 + "Kb was saved as: " + exportFullName);

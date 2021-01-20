@@ -75,6 +75,8 @@ namespace LoU
                 LoUKey = SoftwareKey.CreateSubKey("LoU", true);
             }
 
+            // This is needed so a DLL from LoUAM can be loaded, there's probably a better way to do this?
+            // =========================================
             RegistryKey LoUAMKey = SoftwareKey.OpenSubKey("LoUAM", true);
             if (LoUAMKey == null)
             {
@@ -99,7 +101,10 @@ namespace LoU
                 }
 
             }
+           // =========================================
 
+
+            // Load assemblies from LoA
             string[] UnityAssemblies = {
                 "Assembly-CSharp.dll",
                 "Assembly-CSharp-firstpass.dll",
@@ -298,7 +303,7 @@ namespace LoU
 
                             if (LoUAMDirectory != "./")
                             {
-                                string mapDirectory = Path.GetFullPath(LoUAMDirectory + @"\MapData\");
+                                string mapDirectory = ExtractParam(ClientCommand.CommandParams, 0);
 
                                 UnityEngine.Object[] textures = Resources.LoadAll("prefabs/minimaps/newceladormaps/", typeof(Texture2D));
                                 foreach (Texture2D texture in textures)
