@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
@@ -59,48 +60,59 @@ namespace LoU
 
         public static void ExportPrefab(GameObject Prefab, string mapDirectory)
         {
-            Transform transform = Prefab.transform;
 
-            var localPositionDictionary = new System.Collections.Generic.Dictionary<string, object>
+            List<GameObject> children = Prefab.GetAllChildrenIncludingSelf();
+
+            for (int i = 0; i < children.Count; i++)
             {
-                ["X"] = transform.localPosition.x,
-                ["Y"] = transform.localPosition.y,
-                ["Z"] = transform.localPosition.z
-            };
-            var localRotationDictionary = new System.Collections.Generic.Dictionary<string, object>
-            {
-                ["X"] = transform.localRotation.x,
-                ["Y"] = transform.localRotation.y,
-                ["Z"] = transform.localRotation.z,
-                ["W"] = transform.localRotation.w
-            };
-            var localScaleDictionary = new System.Collections.Generic.Dictionary<string, object>
-            {
-                ["X"] = transform.localScale.x,
-                ["Y"] = transform.localScale.y,
-                ["Z"] = transform.localScale.z,
-            };
+                if (i > 0)
+                {
+                    Transform transform = children[i].transform;
 
-            var transformDictionary = new System.Collections.Generic.Dictionary<string, object>
-            {
-                ["PathID"] = transform.name.ToString(),
-                ["LocalPosition"] = localPositionDictionary,
-                ["LocalRotation"] = localRotationDictionary,
-                ["LocalScale"] = localScaleDictionary
-            };
+                    var localPositionDictionary = new System.Collections.Generic.Dictionary<string, object>
+                    {
+                        ["X"] = transform.localPosition.x,
+                        ["Y"] = transform.localPosition.y,
+                        ["Z"] = transform.localPosition.z
+                    };
+                    var localRotationDictionary = new System.Collections.Generic.Dictionary<string, object>
+                    {
+                        ["X"] = transform.localRotation.x,
+                        ["Y"] = transform.localRotation.y,
+                        ["Z"] = transform.localRotation.z,
+                        ["W"] = transform.localRotation.w
+                    };
+                    var localScaleDictionary = new System.Collections.Generic.Dictionary<string, object>
+                    {
+                        ["X"] = transform.localScale.x,
+                        ["Y"] = transform.localScale.y,
+                        ["Z"] = transform.localScale.z,
+                    };
+
+                    var transformDictionary = new System.Collections.Generic.Dictionary<string, object>
+                    {
+                        ["PathID"] = transform.name.ToString(),
+                        ["LocalPosition"] = localPositionDictionary,
+                        ["LocalRotation"] = localRotationDictionary,
+                        ["LocalScale"] = localScaleDictionary
+                    };
 
 
-            string serializedTransform = JsonConvert.SerializeObject(transformDictionary);
+                    string serializedTransform = JsonConvert.SerializeObject(transformDictionary);
 
-            string exportFullName = Path.Combine(mapDirectory, transform.name.ToString().Replace("Minimap", "") + ".transform");
+                    string exportFullName = Path.Combine(mapDirectory, Prefab.name.ToString().Replace("Minimap", "") + "_" + (i - 1) + ".transform");
 
-            if (File.Exists(exportFullName))
-            {
-                File.Delete(exportFullName);
+                    if (File.Exists(exportFullName))
+                    {
+                        File.Delete(exportFullName);
+                    }
+
+                    File.WriteAllText(exportFullName, serializedTransform);
+                    System.Diagnostics.Debug.WriteLine(serializedTransform.Length + "b was saved as: " + exportFullName);
+                }
             }
 
-            File.WriteAllText(exportFullName, serializedTransform);
-            System.Diagnostics.Debug.WriteLine(serializedTransform.Length / 1024 + "Kb was saved as: " + exportFullName);
+
         }
 
     }
